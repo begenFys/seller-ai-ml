@@ -1,20 +1,26 @@
 version: '3.8'
 
+networks:
+  seller-net:
+    external: true
+
+volumes:
+  seller-ai-qdrant-storage:
+    external: true
+
 services:
-  rag-agent:
-    build: .
-    container_name: limefitness-rag-agent
+  seller-ai-rag-agent:
+    image: begenfys/seller-ai-rag-agent:latest
+    container_name: seller-ai-rag-agent
     ports:
-      - "8000:8000"
-    environment:
-      - QDRANT_URL=${QDRANT_URL}
-      - API_KEY=${API_KEY}
-      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
-    env_file:
-      - .env
+      - "0.0.0.0:${AGENT_HOST_PORT}:${AGENT_PORT}"
+    env_file: &env
+      - .env.prod
     volumes:
       - ./logs:/app/logs
-    restart: unless-stopped
+    restart: &restart unless-stopped
+    networks: &networks
+      - seller-net
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -23,17 +29,16 @@ services:
       start_period: 40s
 
   # Опционально: если вы хотите запустить Qdrant локально
-  qdrant:
+  seller-ai-qdrant:
     image: qdrant/qdrant:v1.7.4
     container_name: qdrant
     ports:
-      - "6333:6333"
-      - "6334:6334"
+      - "0.0.0.0:${QDRANT_HOST_PORT}:${QDRANT_PORT}"
+      - "0.0.0.0:${QDRANT_ADMIN_HOST_PORT}:${QDRANT_ADMIN_PORT}"
     volumes:
-      - qdrant_storage:/qdrant/storage
+      - seller-ai-qdrant-storage:/qdrant/storage
     environment:
       - QDRANT__SERVICE__GRPC_PORT=6334
-    restart: unless-stopped
-
-volumes:
-  qdrant_storage:
+    env_file: *env
+    restart: *restart
+    networks: *networks
