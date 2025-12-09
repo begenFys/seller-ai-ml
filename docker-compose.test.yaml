@@ -29,16 +29,16 @@ services:
       start_period: 40s
 
   # Опционально: если вы хотите запустить Qdrant локально
-  seller-ai-qdrant-test:
-    image: qdrant/qdrant:v1.7.4
-    container_name: seller-ai-qdrant-test
-    ports:
-      - "0.0.0.0:${QDRANT_HOST_PORT}:${QDRANT_PORT}"
-      - "0.0.0.0:${QDRANT_ADMIN_HOST_PORT}:${QDRANT_ADMIN_PORT}"
-    volumes:
-      - seller-ai-qdrant-test-storage:/qdrant/storage
-    environment:
-      - QDRANT__SERVICE__GRPC_PORT=6334
-    env_file: *env
-    restart: *restart
-    networks: *networks
+#  seller-ai-qdrant-test:
+#    image: qdrant/qdrant:v1.7.4
+#    container_name: seller-ai-qdrant-test
+#    ports:
+#      - "0.0.0.0:${QDRANT_HOST_PORT}:${QDRANT_PORT}"
+#      - "0.0.0.0:${QDRANT_ADMIN_HOST_PORT}:${QDRANT_ADMIN_PORT}"
+#    volumes:
+#      - seller-ai-qdrant-test-storage:/qdrant/storage
+#    environment:
+#      - QDRANT__SERVICE__GRPC_PORT=6334
+#    env_file: *env
+#    restart: *restart
+#    networks: *networks
