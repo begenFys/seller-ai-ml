@@ -1,26 +1,26 @@
 version: '3.8'
 
 networks:
-  seller-net:
+  seller-test:
     external: true
 
 volumes:
-  seller-ai-qdrant-storage:
+  seller-ai-qdrant-test-storage:
     external: true
 
 services:
-  seller-ai-rag-agent:
-    image: begenfys/seller-ai-rag-agent:latest
-    container_name: seller-ai-rag-agent
+  seller-ai-rag-agent-test:
+    image: begenfys/seller-ai-rag-agent:test
+    container_name: seller-ai-rag-agent-test
     ports:
       - "0.0.0.0:${AGENT_HOST_PORT}:${AGENT_PORT}"
     env_file: &env
-      - .env.prod
+      - .env.test
     volumes:
       - ./logs:/app/logs
     restart: &restart unless-stopped
     networks: &networks
-      - seller-net
+      - seller-test
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 30s
@@ -29,14 +29,14 @@ services:
       start_period: 40s
 
   # Опционально: если вы хотите запустить Qdrant локально
-  seller-ai-qdrant:
+  seller-ai-qdrant-test:
     image: qdrant/qdrant:v1.7.4
-    container_name: seller-ai-qdrant
+    container_name: seller-ai-qdrant-test
     ports:
       - "0.0.0.0:${QDRANT_HOST_PORT}:${QDRANT_PORT}"
       - "0.0.0.0:${QDRANT_ADMIN_HOST_PORT}:${QDRANT_ADMIN_PORT}"
     volumes:
-      - seller-ai-qdrant-storage:/qdrant/storage
+      - seller-ai-qdrant-test-storage:/qdrant/storage
     environment:
       - QDRANT__SERVICE__GRPC_PORT=6334
     env_file: *env
