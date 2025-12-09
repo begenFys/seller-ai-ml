@@ -2,6 +2,7 @@ import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+from src.config.settings import ADMIN_PORT
 from src.core.rag_agent import ask_agent
 from src.core.embedding import get_embedding
 from src.core.llm import generate_with_openrouter
@@ -96,4 +97,4 @@ async def ask_question_stream(request: QueryRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=ADMIN_PORT)

@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+ADMIN_PORT = os.getenv("ADMIN_PORT")
+
 # Qdrant
 QDRANT_URL = os.getenv("QDRANT_URL")
 API_KEY = os.getenv("API_KEY")
