@@ -1,72 +1,106 @@
 import logging
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+
+from src.config.settings import ADMIN_PORT
 from src.core.rag_agent import ask_agent
 from src.core.embedding import get_embedding
 from src.core.llm import generate_with_openrouter
 from src.core.qdrant_search import client
+from models import QueryRequest, QueryResponse, HealthResponse
 
+# Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def test_connection() -> bool:
+# Создание FastAPI приложения
+app = FastAPI(
+    title="LimeFitness RAG Agent API",
+    description="API для чат-бота фитнес-клуба LimeFitness",
+    version="1.0.0"
+)
+
+# Настройка CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3001",
+        "http://localhost",
+        "http://localhost:3000",
+        "https://api.inverseai.ru",
+        "https://inverseai.ru",
+    ], # TODO: settings from backend rep
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/")
+async def root():
+    return {"message": "LimeFitness RAG Agent API"}
+
+@app.get("/health", response_model=HealthResponse)
+async def health_check():
+    """Проверка состояния всех сервисов"""
+    services = {}
+    
+    # Проверка эмбеддинг-модели
     try:
         _ = get_embedding("test")
-        logger.info("Эмбеддинг-модель доступна.")
+        services["embedding"] = "healthy"
     except Exception as e:
-        logger.error(f"Ошибка эмбеддинг-модели: {e}")
-        return False
-
+        services["embedding"] = f"error: {str(e)}"
+    
+    # Проверка LLM
     try:
         test_message = [{"role": "user", "content": "Привет, ответь коротко 'тест пройден'"}]
         response = generate_with_openrouter(test_message, max_tokens=10)
-        logger.info(f"Генеративная модель работает: {response}")
+        services["llm"] = "healthy"
     except Exception as e:
-        logger.error(f"Ошибка генеративной модели: {e}")
-        return False
-
+        services["llm"] = f"error: {str(e)}"
+    
+    # Проверка Qdrant
     try:
         collections = client.get_collections()
-        logger.info(f"Qdrant подключен, найдено коллекций: {len(collections.collections)}")
+        services["qdrant"] = f"healthy, {len(collections.collections)} collections"
     except Exception as e:
-        logger.error(f"Ошибка подключения к Qdrant: {e}")
-        return False
+        services["qdrant"] = f"error: {str(e)}"
+    
+    overall_status = "healthy" if all("healthy" in str(status) for status in services.values()) else "degraded"
+    
+    return HealthResponse(status=overall_status, services=services)
 
-    return True
+@app.post("/ask", response_model=QueryResponse)
+async def ask_question(request: QueryRequest):
+    """Обработка вопроса пользователя"""
+    try:
+        logger.info(f"Получен запрос: {request.query}")
+        
+        # Проверка входных данных
+        if not request.query or not request.query.strip():
+            raise HTTPException(status_code=400, detail="Query cannot be empty")
+        
+        # Обработка запроса
+        answer = ask_agent(request.query, request.history or [])
+        
+        return QueryResponse(
+            answer=answer,
+            success=True
+        )
+        
+    except Exception as e:
+        logger.error(f"Ошибка при обработке запроса: {e}", exc_info=True)
+        return QueryResponse(
+            answer="Произошла ошибка при обработке запроса",
+            success=False,
+            error=str(e)
+        )
 
-def main():
-    logger.info("RAG Агент LimeFitness (DeepSeek через OpenRouter)")
-    logger.info("=" * 60)
-
-    if not test_connection():
-        logger.error("Не все сервисы доступны. Проверьте настройки.")
-        exit(1)
-
-    logger.info("Поиск будет выполняться по всем доступным коллекциям в Qdrant.")
-
-    history = []
-
-    while True:
-        logger.info("\n" + "=" * 60)
-        user_query = input("Ваш вопрос о фитнес-клубе (или 'quit' для выхода): ").strip()
-
-        if user_query.lower() in ["quit", "exit", "выход", "q"]:
-            logger.info("Работа завершена.")
-            break
-
-        if not user_query:
-            continue
-
-        try:
-            answer = ask_agent(user_query, history)
-            logger.info(f"\nОтвет агента:\n{'-'*40}\n{answer}\n{'-'*40}")
-
-            history.append({"role": "user", "content": user_query})
-            history.append({"role": "assistant", "content": answer})
-
-            if len(history) > 10:
-                history = history[-10:]
-        except Exception as e:
-            logger.error("Ошибка при обработке запроса", exc_info=True)
-            print("Попробуйте повторить запрос или обратиться к менеджеру.")
+@app.post("/ask/stream")
+async def ask_question_stream(request: QueryRequest):
+    """Потоковая обработка вопроса (для будущей реализации)"""
+    raise HTTPException(status_code=501, detail="Stream endpoint not implemented yet")
 
 if __name__ == "__main__":
-    main()
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=ADMIN_PORT)
