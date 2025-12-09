@@ -1,8 +1,7 @@
 # core/qdrant_search.py
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import ScoredPoint
-from core.embedding import get_embedding
-from config.settings import QDRANT_URL, API_KEY
+from src.core.embedding import get_embedding
+from src.config.settings import QDRANT_URL, API_KEY
 import logging
 
 logger = logging.getLogger(__name__)

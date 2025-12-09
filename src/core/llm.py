@@ -1,7 +1,7 @@
 # core/llm.py
 import requests
 import json
-from config.settings import GENERATION_MODEL, OPENROUTER_API_KEY
+from src.config.settings import GENERATION_MODEL, OPENROUTER_API_KEY
 import logging
 
 logger = logging.getLogger(__name__)

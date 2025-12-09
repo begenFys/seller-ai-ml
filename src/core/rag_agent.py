@@ -1,7 +1,7 @@
 # core/rag_agent.py
-from core.qdrant_search import search_context
-from core.llm import generate_with_openrouter
-from utils.helpers import clean_output, format_contexts, truncate_context
+from src.core.qdrant_search import search_context
+from src.core.llm import generate_with_openrouter
+from src.utils.helpers import clean_output, format_contexts, truncate_context
 import logging
 
 logger = logging.getLogger(__name__)

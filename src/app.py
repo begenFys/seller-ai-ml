@@ -3,11 +3,11 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 
-from core.rag_agent import ask_agent
-from core.embedding import get_embedding
-from core.llm import generate_with_openrouter
-from core.qdrant_search import client
-from config.settings import OPENROUTER_API_KEY
+from src.core.rag_agent import ask_agent
+from src.core.embedding import get_embedding
+from src.core.llm import generate_with_openrouter
+from src.core.qdrant_search import client
+from src.config.settings import OPENROUTER_API_KEY
 from models import QueryRequest, QueryResponse, HealthResponse
 
 # Настройка логирования

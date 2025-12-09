@@ -1,6 +1,6 @@
 # core/embedding.py
 from sentence_transformers import SentenceTransformer
-from config.settings import EMBEDDING_MODEL
+from src.config.settings import EMBEDDING_MODEL
 from functools import lru_cache
 import logging
 

@@ -1,9 +1,8 @@
 import logging
-from core.rag_agent import ask_agent
-from core.embedding import get_embedding
-from core.llm import generate_with_openrouter
-from core.qdrant_search import client
-from config.settings import OPENROUTER_API_KEY
+from src.core.rag_agent import ask_agent
+from src.core.embedding import get_embedding
+from src.core.llm import generate_with_openrouter
+from src.core.qdrant_search import client
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
